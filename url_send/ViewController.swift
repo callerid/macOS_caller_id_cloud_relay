@@ -44,8 +44,131 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     }
     
     // -------------------------------------------------------------------------
+    //                     Interation Code
+    // -------------------------------------------------------------------------
+    
+    @IBOutlet weak var rbBasicUnit: NSButton!
+    @IBOutlet weak var rbDeluxeUnit: NSButton!
+    @IBOutlet weak var rbPastedUrl: NSButton!
+    @IBOutlet weak var rbCustomUrl: NSButton!
+    
+    @IBOutlet weak var tbLine: NSTextField!
+    @IBOutlet weak var tbIO: NSTextField!
+    @IBOutlet weak var tbSE: NSTextField!
+    @IBOutlet weak var tbDuration: NSTextField!
+    @IBOutlet weak var tbRingType: NSTextField!
+    @IBOutlet weak var tbRings: NSTextField!
+    @IBOutlet weak var tbDateTime: NSTextField!
+    @IBOutlet weak var tbNumber: NSTextField!
+    @IBOutlet weak var tbName: NSTextField!
+    @IBOutlet weak var tbStatus: NSTextField!
+    
+    
+    @IBAction func rbBasicUnit_click(_ sender: Any) {
+        rbBasicUnit.state = NSOnState
+        rbDeluxeUnit.state = NSOffState
+    }
+    @IBAction func rbDeluxeUnit_click(_ sender: Any) {
+        rbBasicUnit.state = NSOffState
+        rbDeluxeUnit.state = NSOnState
+    }
+    @IBAction func rbPastedUrl_click(_ sender: Any) {
+        
+        rbCustomUrl.state = NSOffState
+        rbPastedUrl.state = NSOnState
+        
+        tbLine.isEnabled = false
+        tbIO.isEnabled = false
+        tbSE.isEnabled = false
+        tbDuration.isEnabled = false
+        tbRingType.isEnabled = false
+        tbRings.isEnabled = false
+        tbDateTime.isEnabled = false
+        tbNumber.isEnabled = false
+        tbName.isEnabled = false
+        tbStatus.isEnabled = false
+        
+    }
+    @IBAction func rbCustomURL_click(_ sender: Any) {
+        
+        rbCustomUrl.state = NSOnState
+        rbPastedUrl.state = NSOffState
+        
+        tbLine.isEnabled = true
+        tbIO.isEnabled = true
+        tbSE.isEnabled = true
+        tbDuration.isEnabled = true
+        tbRingType.isEnabled = true
+        tbRings.isEnabled = true
+        tbDateTime.isEnabled = true
+        tbNumber.isEnabled = true
+        tbName.isEnabled = true
+        tbStatus.isEnabled = true
+        
+    }
+    
+    
+    // -------------------------------------------------------------------------
     //                     Posting code
     // -------------------------------------------------------------------------
+    
+    @IBOutlet weak var tbServer: NSTextField!
+    @IBOutlet weak var lbPasteStatus: NSTextField!
+    
+    @IBAction func btnPaste_click(_ sender: Any) {
+        paste_to_url()
+    }
+    
+    // Gets clipboard text and paste into program
+    func paste_to_url(){
+        
+        let clipboardText = clipboardContent()
+        
+        if(clipboardText == nil){
+            
+            lbPasteStatus.stringValue = "Failed to Paste"
+            return
+            
+        }
+        
+        let urlParts = clipboardText?.components(separatedBy: "?")
+        
+        if(urlParts?.count != 2){
+            
+            lbPasteStatus.stringValue = "Failed to Paste"
+            return
+            
+        }
+        
+        let urlString = urlParts?[0]
+        let params = urlParts?[1]
+        
+        tbServer.stringValue = urlString!
+        
+        if(parseParams(params: params!)){
+            
+            lbPasteStatus.stringValue = "Pasted"
+            return
+            
+        }
+        
+        lbPasteStatus.stringValue = "Paste Failed"
+        
+    }
+    
+    func parseParams(params:String) -> Bool{
+        
+        let paras = params.components(separatedBy: "&")
+        
+        if(paras.count<1){
+            return false
+        }
+        
+        
+        
+        return true
+        
+    }
     
     func post_url(urlPost:String)
     {
@@ -196,6 +319,11 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             }
         }
 
+    }
+    
+    func clipboardContent() -> String?
+    {
+        return NSPasteboard.general().pasteboardItems?.first?.string(forType: "public.utf8-plain-text")
     }
 }
 
