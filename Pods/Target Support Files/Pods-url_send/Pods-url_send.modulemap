@@ -1,0 +1,6 @@
+framework module Pods_url_send {
+  umbrella header "Pods-url_send-umbrella.h"
+
+  export *
+  module * { export * }
+}
