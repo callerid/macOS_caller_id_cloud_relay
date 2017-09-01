@@ -63,6 +63,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     @IBOutlet weak var tbName: NSTextField!
     @IBOutlet weak var tbStatus: NSTextField!
     
+    @IBOutlet weak var btnTestUrl: NSButton!
     
     @IBAction func rbBasicUnit_click(_ sender: Any) {
         rbBasicUnit.state = NSOnState
@@ -88,7 +89,11 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         tbName.isEnabled = false
         tbStatus.isEnabled = false
         
+        btnTestUrl.stringValue = "Test Supplied URL"
+        lbGeneratedUrl.textColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+        
     }
+    @IBOutlet weak var lbGeneratedUrl: NSTextField!
     @IBAction func rbCustomURL_click(_ sender: Any) {
         
         rbCustomUrl.state = NSOnState
@@ -105,6 +110,9 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         tbName.isEnabled = true
         tbStatus.isEnabled = true
         
+        btnTestUrl.stringValue = "Test Custom URL"
+        lbGeneratedUrl.textColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1)
+        
     }
     
     
@@ -113,7 +121,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     // -------------------------------------------------------------------------
     
     @IBOutlet weak var tbServer: NSTextField!
-    @IBOutlet weak var lbPasteStatus: NSTextField!
+    @IBOutlet weak var tbSuppliedUrl: NSTextField!
     
     @IBAction func btnPaste_click(_ sender: Any) {
         paste_to_url()
@@ -126,7 +134,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         if(clipboardText == nil){
             
-            lbPasteStatus.stringValue = "Failed to Paste"
+            // TODO - failed
             return
             
         }
@@ -135,7 +143,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         if(urlParts?.count != 2){
             
-            lbPasteStatus.stringValue = "Failed to Paste"
+            // TODO - passed
             return
             
         }
@@ -147,24 +155,104 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         if(parseParams(params: params!)){
             
-            lbPasteStatus.stringValue = "Pasted"
+            // TODO
+            tbSuppliedUrl.stringValue = clipboardText!
             return
             
         }
         
-        lbPasteStatus.stringValue = "Paste Failed"
+        // TODO - failed
         
     }
     
+    let linePattern = "([&]?([A-Za-z0-9_-]+)=%Line)"
+    let ioPattern = "([&]?([A-Za-z0-9_-]+)=%IO)"
+    let sePattern = "([&]?([A-Za-z0-9_-]+)=%SE)"
+    let durationPattern = "([&]?([A-Za-z0-9_-+)=%Duration)"
+    let ringTypePattern = "([&]?([A-Za-z0-9_-+)=%RingType)"
+    let ringNumberPattern = "([&]?([A-Za-z0-9_-+)=%RingNumber)"
+    let timePattern = "([&]?([A-Za-z0-9_-+)=%Time)"
+    let phonePattern = "([&]?([A-Za-z0-9_-+)=%Number)"
+    let namePattern = "([&]?([A-Za-z0-9_-+)=%Name)"
+    let statusPattern = "([&]?([A-Za-z0-9_-+)=%Status)"
+    
     func parseParams(params:String) -> Bool{
         
-        let paras = params.components(separatedBy: "&")
+        // Setup varibles
+        var line_variableName = "not used"
+        var time_variableName = "not used"
+        var phone_variableName = "not used"
+        var name_variableName = "not used"
+        var io_variableName = "not used"
+        var se_variableName = "not used"
+        var status_variableName = "not used"
+        var duration_variableName = "not used"
+        var ringNumber_variableName = "not used"
+        var ringType_variableName = "not used"
         
-        if(paras.count<1){
-            return false
+        // Capture variables from params string
+        let lineMatch = params.capturedGroups(withRegex: linePattern)
+        if(lineMatch.count>1){
+            line_variableName = lineMatch[1]
+        }
+        
+        let timeMatch = params.capturedGroups(withRegex: timePattern)
+        if(timeMatch.count>1){
+            time_variableName = timeMatch[1]
+        }
+        
+        let phoneMatch = params.capturedGroups(withRegex: phonePattern)
+        if(phoneMatch.count>1){
+            phone_variableName = phoneMatch[1]
+        }
+        
+        let nameMatch = params.capturedGroups(withRegex: namePattern)
+        if(nameMatch.count>1){
+            name_variableName = nameMatch[1]
+        }
+        
+        let ioMatch = params.capturedGroups(withRegex: ioPattern)
+        if(ioMatch.count>1){
+            io_variableName = ioMatch[1]
+        }
+        
+        let seMatch = params.capturedGroups(withRegex: sePattern)
+        if(seMatch.count>1){
+            se_variableName = seMatch[1]
+        }
+        
+        let statusMatch = params.capturedGroups(withRegex: statusPattern)
+        if(statusMatch.count>1){
+            status_variableName = statusMatch[1]
+        }
+        
+        let durationMatch = params.capturedGroups(withRegex: durationPattern)
+        if(durationMatch.count>1){
+            duration_variableName = durationMatch[1]
+        }
+        
+        let ringNumberMatch = params.capturedGroups(withRegex: ringNumberPattern)
+        if(ringNumberMatch.count>1){
+            ringNumber_variableName = ringNumberMatch[1]
+        }
+        
+        let ringTypeMatch = params.capturedGroups(withRegex: ringTypePattern)
+        if(ringTypeMatch.count>1){
+            ringType_variableName = ringTypeMatch[1]
         }
         
         
+        // Display variables
+        tbLine.stringValue = line_variableName
+        tbDateTime.stringValue = time_variableName
+        tbNumber.stringValue = phone_variableName
+        tbName.stringValue = name_variableName
+        tbIO.stringValue = io_variableName
+        tbSE.stringValue = se_variableName
+        tbStatus.stringValue = status_variableName
+        tbDuration.stringValue = duration_variableName
+        tbRings.stringValue = ringNumber_variableName
+        tbRingType.stringValue = ringType_variableName
         
         return true
         
