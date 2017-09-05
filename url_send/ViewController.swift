@@ -66,12 +66,30 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     @IBOutlet weak var btnTestUrl: NSButton!
     
     @IBAction func rbBasicUnit_click(_ sender: Any) {
+        
         rbBasicUnit.state = NSOnState
         rbDeluxeUnit.state = NSOffState
+        
+        tbIO.isEnabled = false
+        tbSE.isEnabled = false
+        tbStatus.isEnabled = false
+        tbDuration.isEnabled = false
+        tbRings.isEnabled = false
+        tbRingType.isEnabled = false
+        
     }
     @IBAction func rbDeluxeUnit_click(_ sender: Any) {
+        
         rbBasicUnit.state = NSOffState
         rbDeluxeUnit.state = NSOnState
+        
+        tbIO.isEnabled = true
+        tbSE.isEnabled = true
+        tbStatus.isEnabled = true
+        tbDuration.isEnabled = true
+        tbRings.isEnabled = true
+        tbRingType.isEnabled = true
+        
     }
     @IBAction func rbPastedUrl_click(_ sender: Any) {
         
@@ -112,6 +130,27 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         btnTestUrl.stringValue = "Test Custom URL"
         lbGeneratedUrl.textColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1)
+        
+    }
+    
+    // -------------------------------------------------------------------------
+    //                     Test POSTing code
+    // -------------------------------------------------------------------------
+    
+    @IBAction func btnTestUrl_Click(_ sender: Any) {
+        
+        let usingSupplied:Bool = rbPastedUrl.state == NSOnState
+        
+        if(usingSupplied){
+            
+            post_url(urlPost: tbSuppliedUrl.stringValue, line: "01", time: "01/01 12:00 PM", phone: "770-263-7111", name: "CallerID.com", io: "I", se: "S", status: "x", duration: "0030", ringNumber: "03", ringType: "A")
+            
+        }
+        else{
+            
+            post_url(urlPost: lbGeneratedUrl.stringValue, line: "01", time: "01/01 12:00 PM", phone: "770-263-7111", name: "CallerID.com", io: "I", se: "S", status: "x", duration: "0030", ringNumber: "03", ringType: "A")
+            
+        }
         
     }
     
@@ -165,16 +204,17 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
     }
     
+    // Patterns
     let linePattern = "([&]?([A-Za-z0-9_-]+)=%Line)"
     let ioPattern = "([&]?([A-Za-z0-9_-]+)=%IO)"
     let sePattern = "([&]?([A-Za-z0-9_-]+)=%SE)"
-    let durationPattern = "([&]?([A-Za-z0-9_-+)=%Duration)"
-    let ringTypePattern = "([&]?([A-Za-z0-9_-+)=%RingType)"
-    let ringNumberPattern = "([&]?([A-Za-z0-9_-+)=%RingNumber)"
-    let timePattern = "([&]?([A-Za-z0-9_-+)=%Time)"
-    let phonePattern = "([&]?([A-Za-z0-9_-+)=%Number)"
-    let namePattern = "([&]?([A-Za-z0-9_-+)=%Name)"
-    let statusPattern = "([&]?([A-Za-z0-9_-+)=%Status)"
+    let durationPattern = "([&]?([A-Za-z0-9_-]+)=%Duration)"
+    let ringTypePattern = "([&]?([A-Za-z0-9_-]+)=%RingType)"
+    let ringNumberPattern = "([&]?([A-Za-z0-9_-]+)=%RingNumber)"
+    let timePattern = "([&]?([A-Za-z0-9_-]+)=%Time)"
+    let phonePattern = "([&]?([A-Za-z0-9_-]+)=%Phone)"
+    let namePattern = "([&]?([A-Za-z0-9_-]+)=%Name)"
+    let statusPattern = "([&]?([A-Za-z0-9_-]+)=%Status)"
     
     func parseParams(params:String) -> Bool{
         
@@ -258,22 +298,60 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
     }
     
-    func post_url(urlPost:String)
+    @IBOutlet weak var ckbUseAuth: NSButton!
+    @IBOutlet weak var tbUserName: NSTextField!
+    @IBOutlet weak var tbPassword: NSTextField!
+    
+    // Send $_POST to Cloud server
+    func post_url(urlPost:String,
+                  line:String,
+                  time:String,
+                  phone:String,
+                  name:String,
+                  io:String,
+                  se:String,
+                  status:String,
+                  duration:String,
+                  ringNumber:String,
+                  ringType:String)
     {
         
         let urlParts = urlPost.components(separatedBy: "?")
         let urlString = urlParts[0]
-        let params = urlParts[1]
+        var usingParams = urlParts[1]
         
-        let url:NSURL = NSURL(string: urlString)!
-        let session = URLSession.shared
+        // Replace CallerID variables with actual data
+        usingParams = usingParams.replacingOccurrences(of: "%Line", with: line)
+        usingParams = usingParams.replacingOccurrences(of: "%Time", with: time)
+        usingParams = usingParams.replacingOccurrences(of: "%Phone", with: phone)
+        usingParams = usingParams.replacingOccurrences(of: "%Name", with: name)
+        usingParams = usingParams.replacingOccurrences(of: "%IO", with: io)
+        usingParams = usingParams.replacingOccurrences(of: "%SE", with: se)
+        usingParams = usingParams.replacingOccurrences(of: "%Status", with: status)
+        usingParams = usingParams.replacingOccurrences(of: "%Duration", with: duration)
+        usingParams = usingParams.replacingOccurrences(of: "%RingNumber", with: ringNumber)
+        usingParams = usingParams.replacingOccurrences(of: "%RingType", with: ringType)
         
-        let request = NSMutableURLRequest(url: url as URL)
+        // Create request
+        let fullUrl = urlString + "?" + usingParams
+        let requestUrl = URL(string: fullUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+        let request = NSMutableURLRequest(url:requestUrl!)
         request.httpMethod = "POST"
         
-        let paramString = params
-        request.httpBody = paramString.data(using: String.Encoding.utf8)
+        // Create session configuration (for authentication)
+        let config = URLSessionConfiguration.default
+        if(ckbUseAuth.state == NSOnState){
+            let userPasswordString = "\(tbUserName.stringValue):\(tbPassword.stringValue)",
+            userPasswordData = userPasswordString.data(using: String.Encoding.utf8),
+            base64EncodedCredential = userPasswordData?.base64EncodedString(),
+            authString = "Basic \(base64EncodedCredential ?? "none")"
+            config.httpAdditionalHeaders = ["Authorization" : authString]
+        }
         
+        // Create session
+        let session = URLSession(configuration: config)
+        
+        // Set up task for execution
         let task = session.dataTask(with: request as URLRequest) {
             (
             data, response, error) in
@@ -289,8 +367,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             }
         }
         
-        task.resume()
-        
+        task.resume()        
     }
     
     // --------------------------------------------------------------------------------------
