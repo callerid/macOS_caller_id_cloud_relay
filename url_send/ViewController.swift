@@ -17,14 +17,155 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     
     // --------------------------------------------------------------------------------------
     
+    let sDataSuppliedUrl = "supplied_url"
+    let sDataUsingSuppliedUrl = "using_supplied_url"
+    let sDataUsingDeluxeUnit = "using_deluxe_unit"
+    let sDataServer = "server"
+    
+    let sDataParamLine = "param_line"
+    let sDataParamTime = "param_time"
+    let sDataParamPhone = "param_phone"
+    let sDataParamName = "param_name"
+    let sDataParamIO = "param_io"
+    let sDataParamSE = "param_se"
+    let sDataParamStatus = "param_status"
+    let sDataParamDuration = "param_duration"
+    let sDataParamRingNumber = "param_ring_number"
+    let sDataParamRingType = "param_ring_type"
+    
+    let sDataUsingAuth = "using_auth"
+    let sDataUsername = "username"
+    let sDataPassword = "password"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // Create database if not already created
+        if(DBManager.shared.createDatabase()){
+            // Database created
+            print("database created")
+        }
+        else{
+            // Database failed to create
+            print("failed to create database")
+        }
         
         // Start UDP receiver
         startServer()
         
+        // Load up previous values
+        let defaults = UserDefaults.standard
+        
+        // If first run
+        if(defaults.string(forKey: sDataUsingSuppliedUrl) == nil){
+            return
+        }
+        
+        // Supplied URL
+        tbSuppliedUrl.stringValue = defaults.string(forKey: sDataSuppliedUrl)!
+        
+        // Supplied vs Custom
+        let usingSupplied = defaults.bool(forKey: sDataUsingSuppliedUrl)
+        if(usingSupplied){
+            rbPastedUrl.state = NSOnState
+            rbCustomUrl.state = NSOffState
+        }
+        else{
+            rbPastedUrl.state = NSOffState
+            rbCustomUrl.state = NSOnState
+        }
+        
+        // Deluxe or Basic
+        let usingDeluxe = defaults.bool(forKey: sDataUsingDeluxeUnit)
+        if(usingDeluxe){
+            
+            rbDeluxeUnit.state = NSOnState
+            rbBasicUnit.state = NSOffState
+            
+            tbIO.isEnabled = true
+            tbSE.isEnabled = true
+            tbStatus.isEnabled = true
+            tbDuration.isEnabled = true
+            tbRings.isEnabled = true
+            tbRingType.isEnabled = true
+            
+        }
+        else{
+            rbDeluxeUnit.state = NSOffState
+            rbBasicUnit.state = NSOnState
+        }
+        
+        tbServer.stringValue = defaults.string(forKey: sDataServer)!
+        
+        tbLine.stringValue = defaults.string(forKey: sDataParamLine)!
+        tbDateTime.stringValue = defaults.string(forKey: sDataParamTime)!
+        tbNumber.stringValue = defaults.string(forKey: sDataParamPhone)!
+        tbName.stringValue = defaults.string(forKey: sDataParamName)!
+        tbIO.stringValue = defaults.string(forKey: sDataParamIO)!
+        tbSE.stringValue = defaults.string(forKey: sDataParamSE)!
+        tbStatus.stringValue = defaults.string(forKey: sDataParamStatus)!
+        tbDuration.stringValue = defaults.string(forKey: sDataParamDuration)!
+        tbRings.stringValue = defaults.string(forKey: sDataParamRingNumber)!
+        tbRingType.stringValue = defaults.string(forKey: sDataParamRingType)!
+        
+        // Using auth.
+        let usingAuth = defaults.bool(forKey: sDataUsingAuth)
+        if(usingAuth){
+            ckbUseAuth.state = NSOnState
+        }
+        else{
+            ckbUseAuth.state = NSOffState
+        }
+        
+        tbUserName.stringValue = defaults.string(forKey: sDataUsername)!
+        tbPassword.stringValue = defaults.string(forKey: sDataPassword)!
+        
+        // Load up log
+        let results = DBManager.shared.getPreviousLog()
+        
+        for entry in results {
+            addToLog(text: entry)
+        }
+        
     }
+    
+    override func viewDidDisappear() {
+        super.viewDidDisappear()
+        
+        // Save all settings
+        let defaults = UserDefaults.standard
+        defaults.set(tbSuppliedUrl.stringValue, forKey: sDataSuppliedUrl)
+        defaults.set(rbPastedUrl.state==NSOnState, forKey: sDataUsingSuppliedUrl)
+        defaults.set(rbDeluxeUnit.state == NSOnState, forKey: sDataUsingDeluxeUnit)
+        defaults.set(tbServer.stringValue, forKey: sDataServer)
+        
+        defaults.set(tbLine.stringValue, forKey: sDataParamLine)
+        defaults.set(tbDateTime.stringValue, forKey: sDataParamTime)
+        defaults.set(tbNumber.stringValue, forKey: sDataParamPhone)
+        defaults.set(tbName.stringValue, forKey: sDataParamName)
+        defaults.set(tbIO.stringValue, forKey: sDataParamIO)
+        defaults.set(tbSE.stringValue, forKey: sDataParamSE)
+        defaults.set(tbStatus.stringValue, forKey: sDataParamStatus)
+        defaults.set(tbDuration.stringValue, forKey: sDataParamDuration)
+        defaults.set(tbRings.stringValue, forKey: sDataParamRingNumber)
+        defaults.set(tbRingType.stringValue, forKey: sDataParamRingType)
+        
+        defaults.set(ckbUseAuth.state==NSOnState, forKey: sDataUsingAuth)
+        defaults.set(tbUserName.stringValue, forKey: sDataUsername)
+        defaults.set(tbPassword.stringValue, forKey: sDataPassword)
+        
+    }
+    
+    func showPopup(title:String, message:String){
+      
+        let myPopup: NSAlert = NSAlert()
+        myPopup.messageText = title
+        myPopup.informativeText = message
+        myPopup.alertStyle = NSAlertStyle.informational
+        myPopup.runModal()
+        
+    }
+    
 
     // Log commands
     @IBOutlet weak var stv_log: NSScrollView!
@@ -40,6 +181,24 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             textView.scrollRangeToVisible(bottom)
             
         }
+        
+    }
+    
+    // SQL Log Commands
+    // Send $_POST to Cloud server
+    func insertIntoSql(line:String,
+                  time:String,
+                  phone:String,
+                  name:String,
+                  io:String,
+                  se:String,
+                  status:String,
+                  duration:String,
+                  ringNumber:String,
+                  ringType:String,
+                  checksum:String)
+    {
+        DBManager.shared.addToLog(dateTime: time, line: line, type: io, indicator: se, dur: duration, checksum: checksum, rings: ringNumber, num: phone, name: name)
         
     }
     
@@ -173,7 +332,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         if(clipboardText == nil){
             
-            // TODO - failed
+            showPopup(title: "Failed", message: "No text found in Clipboard.")
             return
             
         }
@@ -182,7 +341,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         if(urlParts?.count != 2){
             
-            // TODO - passed
+            showPopup(title: "Failed", message: "Text found on Clipboard is not in correct format.")
             return
             
         }
@@ -194,13 +353,13 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         if(parseParams(params: params!)){
             
-            // TODO
+            showPopup(title: "Success", message: "Pasted Successful")
             tbSuppliedUrl.stringValue = clipboardText!
             return
             
         }
         
-        // TODO - failed
+        showPopup(title: "Failed", message: "Text found on Clipboard is not in correct format.")
         
     }
     
@@ -357,7 +516,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             data, response, error) in
             
             guard let _:NSData = data as NSData?, let _:URLResponse = response, error == nil else {
-                print("error")
+                print("Error posting to Cloud.")
                 return
             }
             
@@ -367,7 +526,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             }
         }
         
-        task.resume()        
+        task.resume()
     }
     
     // --------------------------------------------------------------------------------------
@@ -443,9 +602,9 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             // declare used variables for matching
             var lineNumber = "n/a"
             var startOrEnd = "n/a"
+            var ckSum = "n/a"
             var inboundOrOutbound = "n/a"
             var duration = "n/a"
-            var ckSum = "B"
             var callRing = "n/a"
             var callTime = "01/01 0:00:00"
             var phoneNumber = "n/a"
@@ -466,6 +625,24 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
                 phoneNumber = callMatches[8]
                 callerId = callMatches[9]
                 
+                // Add to SQL
+                insertIntoSql(line: lineNumber, time: callTime, phone: phoneNumber, name: callerId, io: inboundOrOutbound, se: startOrEnd, status: detailedType, duration: duration, ringNumber: callRing.getCharAtIndexAsString(i: 0), ringType: callRing.getCharAtIndexAsString(i: 1), checksum: ckSum)
+                
+                // Get URL to post to
+                var postToThisUrl = ""
+                if(rbPastedUrl.state == NSOnState){
+                    postToThisUrl = tbSuppliedUrl.stringValue
+                }
+                else{
+                    postToThisUrl = lbGeneratedUrl.stringValue
+                }
+                
+                let ringT = callRing.getCharAtIndexAsString(i: 0)
+                let ringN = callRing.getCharAtIndexAsString(i: 1)
+                
+                // POST to Cloud
+                post_url(urlPost: postToThisUrl, line: lineNumber, time: callTime, phone: phoneNumber, name: callerId, io: inboundOrOutbound, se: startOrEnd, status: detailedType, duration: duration, ringNumber: ringN, ringType: ringT)
+                
                 let textToLog = (udpRecieved as String).getCompleteMatch(regex: callRecordPattern)
                 addToLog(text: textToLog)
                 
@@ -478,6 +655,18 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
                 lineNumber = detailMatches[0]
                 detailedType = detailMatches[1]
                 callTime = detailMatches[2]
+                
+                // Get URL to post to
+                var postToThisUrl = ""
+                if(rbPastedUrl.state == NSOnState){
+                    postToThisUrl = tbSuppliedUrl.stringValue
+                }
+                else{
+                    postToThisUrl = lbGeneratedUrl.stringValue
+                }
+                
+                // POST to Cloud
+                post_url(urlPost: postToThisUrl, line: lineNumber, time: callTime, phone: "", name: "", io: "", se: "", status: detailedType, duration: "", ringNumber: "", ringType: "")
                 
                 addToLog(text: udpRecieved as String)
                 
@@ -493,6 +682,12 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
 }
 
 extension String {
+    
+    func getCharAtIndexAsString(i:Int)->String{
+        let index = self.index(self.startIndex, offsetBy: i)
+        return "\(self [index])"
+    }
+    
     func capturedGroups(withRegex pattern: String) -> [String] {
         var results = [String]()
         

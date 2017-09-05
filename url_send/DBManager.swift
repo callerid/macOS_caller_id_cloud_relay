@@ -140,6 +140,45 @@ class DBManager: NSObject {
     // ----------------------------------------------------------
     //                 Query Executioins
     // ----------------------------------------------------------
+    func getPreviousLog() -> [String] {
+        
+        let results = getResults(query: "SELECT * FROM calls LIMIT 100;", values: [""])
+        
+        var rtnResults = [String]()
+        
+        while results.next(){
+            
+            let time = results.string(forColumn: field_datetime)
+            let line = results.string(forColumn: field_line)
+            let type = results.string(forColumn: field_type)
+            let indicator = results.string(forColumn: field_indicator)
+            let dur = results.string(forColumn: field_duration)
+            let rings = results.string(forColumn: field_rings)
+            let cksum = results.string(forColumn: field_checksum)
+            let number = results.string(forColumn: field_number)
+            let name = results.string(forColumn: field_name)
+            
+            
+            
+            var builtLogString = line
+            builtLogString = builtLogString! + " " + type!
+            builtLogString = builtLogString! + " " + indicator!
+            builtLogString = builtLogString! + " " + dur!
+            builtLogString = builtLogString! + " " + cksum!
+            builtLogString = builtLogString! + " " + rings!
+            builtLogString = builtLogString! + " " + time!
+            builtLogString = builtLogString! + " " + number!
+            builtLogString = builtLogString! + " " + name!
+            
+            rtnResults.append(builtLogString!)
+            
+            
+        }
+        
+        return rtnResults
+        
+    }
+    
     func addToLog(dateTime:String,
                   line:String,
                   type:String,
