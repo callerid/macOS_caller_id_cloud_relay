@@ -37,6 +37,8 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     let sDataUsername = "username"
     let sDataPassword = "password"
     
+    let sDataGenUrl = "generated_url"
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -113,6 +115,8 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         tbUserName.stringValue = defaults.string(forKey: sDataUsername)!
         tbPassword.stringValue = defaults.string(forKey: sDataPassword)!
         
+        lbGeneratedUrl.stringValue = defaults.string(forKey: sDataGenUrl)!
+        
         // Load up log
         let results = DBManager.shared.getPreviousLog(limit: 25)
         
@@ -146,6 +150,8 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         defaults.set(ckbUseAuth.state==NSOnState, forKey: sDataUsingAuth)
         defaults.set(tbUserName.stringValue, forKey: sDataUsername)
         defaults.set(tbPassword.stringValue, forKey: sDataPassword)
+        
+        defaults.set(lbGeneratedUrl.stringValue, forKey: sDataGenUrl)
         
     }
     
@@ -316,6 +322,57 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     
     @IBAction func btnPaste_click(_ sender: Any) {
         paste_to_url()
+    }
+    
+    // Generating functions
+    
+    
+    @IBAction func btnGenerate_Click(_ sender: Any) {
+        generate_web_url()
+    }
+    // Generating web address
+    func generate_web_url()
+    {
+        
+        var genUrl = tbServer.stringValue + "?"
+        
+        if(tbLine.stringValue != ""){
+            genUrl = genUrl + tbLine.stringValue + "=%Line&"
+        }
+        
+        if(tbDateTime.stringValue != ""){
+            genUrl = genUrl + tbDateTime.stringValue + "=%Time&"
+        }
+        
+        if(tbNumber.stringValue != ""){
+            genUrl = genUrl + tbNumber.stringValue + "=%Phone&"
+        }
+        
+        if(tbName.stringValue != ""){
+            genUrl = genUrl + tbName.stringValue + "=%Name&"
+        }
+        if(tbIO.stringValue != ""){
+            genUrl = genUrl + tbIO.stringValue + "=%IO&"
+        }
+        if(tbSE.stringValue != ""){
+            genUrl = genUrl + tbSE.stringValue + "=%SE&"
+        }
+        if(tbStatus.stringValue != ""){
+            genUrl = genUrl + tbStatus.stringValue + "=%Status&"
+        }
+        if(tbDuration.stringValue != ""){
+            genUrl = genUrl + tbDuration.stringValue + "=%Duration&"
+        }
+        if(tbRings.stringValue != ""){
+            genUrl = genUrl + tbRings.stringValue + "=%RingNumber&"
+        }
+        if(tbRingType.stringValue != ""){
+            genUrl = genUrl + tbRingType.stringValue + "=%RingType&"
+        }
+        
+        // Return generated string
+        lbGeneratedUrl.stringValue = genUrl.substring(to: genUrl.index(before: genUrl.endIndex))
+        
     }
     
     // Gets clipboard text and paste into program
