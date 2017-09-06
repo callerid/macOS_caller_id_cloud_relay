@@ -41,14 +41,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         super.viewDidLoad()
 
         // Create database if not already created
-        if(DBManager.shared.createDatabase()){
-            // Database created
-            print("database created")
-        }
-        else{
-            // Database failed to create
-            print("failed to create database")
-        }
+        _ = DBManager.shared.createDatabase()
         
         // Start UDP receiver
         startServer()
@@ -121,9 +114,9 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         tbPassword.stringValue = defaults.string(forKey: sDataPassword)!
         
         // Load up log
-        let results = DBManager.shared.getPreviousLog()
+        let results = DBManager.shared.getPreviousLog(limit: 25)
         
-        for entry in results {
+        for entry in results.reversed() {
             addToLog(text: entry)
         }
         

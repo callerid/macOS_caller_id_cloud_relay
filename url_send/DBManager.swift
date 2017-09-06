@@ -65,11 +65,18 @@ class DBManager: NSObject {
                     
                     // At the end close the database.
                     database.close()
+                    print("database created")
                 }
                 else {
                     print("Could not open the database.")
                 }
             }
+            else{
+                print("database is nil")
+            }
+        }
+        else{
+            print("database already exists")
         }
         
         return created
@@ -140,9 +147,10 @@ class DBManager: NSObject {
     // ----------------------------------------------------------
     //                 Query Executioins
     // ----------------------------------------------------------
-    func getPreviousLog() -> [String] {
+    func getPreviousLog(limit:Int) -> [String] {
         
-        let results = getResults(query: "SELECT * FROM calls LIMIT 100;", values: [""])
+        let theQuery = "SELECT * FROM calls ORDER BY id DESC LIMIT \(limit);"
+        let results = getResults(query: theQuery, values: [""])
         
         var rtnResults = [String]()
         
@@ -190,14 +198,14 @@ class DBManager: NSObject {
                   name:String){
         
         let insertQuery = "INSERT INTO calls (" +
-        "\(field_datetime)" +
-        "\(field_line)" +
-        "\(field_type)" +
-        "\(field_indicator)" +
-        "\(field_duration)" +
-        "\(field_checksum)" +
-        "\(field_rings)" +
-        "\(field_number)" +
+        "\(field_datetime)," +
+        "\(field_line)," +
+        "\(field_type)," +
+        "\(field_indicator)," +
+        "\(field_duration)," +
+        "\(field_checksum)," +
+        "\(field_rings)," +
+        "\(field_number)," +
         "\(field_name) " +
         ") VALUES (" +
         "'\(dateTime)'," +
