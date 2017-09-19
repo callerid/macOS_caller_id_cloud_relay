@@ -697,16 +697,16 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     func parseParams(params:String) -> Bool{
         
         // Setup varibles
-        var line_variableName = "not used"
-        var time_variableName = "not used"
-        var phone_variableName = "not used"
-        var name_variableName = "not used"
-        var io_variableName = "not used"
-        var se_variableName = "not used"
-        var status_variableName = "not used"
-        var duration_variableName = "not used"
-        var ringNumber_variableName = "not used"
-        var ringType_variableName = "not used"
+        var line_variableName = ""
+        var time_variableName = ""
+        var phone_variableName = ""
+        var name_variableName = ""
+        var io_variableName = ""
+        var se_variableName = ""
+        var status_variableName = ""
+        var duration_variableName = ""
+        var ringNumber_variableName = ""
+        var ringType_variableName = ""
         
         // Capture variables from params string
         let lineMatch = params.capturedGroups(withRegex: linePattern)
