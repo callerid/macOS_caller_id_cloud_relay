@@ -908,13 +908,52 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     }
     
     // --------------------------------------------------------------------------------------
-    
+    func removeReceptionFromBuffer(reception:String){
+        
+        var indexes:[Int] = []
+        var cnt = 0
+        
+        for rec in previousReceived {
+            
+            if(rec.contains(reception.substring(from:reception.index(reception.endIndex, offsetBy: -20)))){
+                indexes.append(cnt)
+            }
+            
+            cnt = cnt + 1
+            
+        }
+        
+        for i in (0...indexes.count - 1).reversed() {
+            
+            previousReceived.remove(at: indexes[i])
+            
+        }
+        
+    }
     // -------------------------------------------------------------------------
     //                     Receive data from a UDP broadcast
     // -------------------------------------------------------------------------
+    var previousReceived: [String] = []
     func udpSocket(_ sock: GCDAsyncUdpSocket, didReceive data: Data, fromAddress address: Data, withFilterContext filterContext: Any?) {
         
         if let udpRecieved = NSString(data: data, encoding: String.Encoding.ascii.rawValue) {
+            
+            // ----------------------------------------------------------------
+            // Keep track of previous 30 to have ablitiy of ignoring duplicate
+            // packets - even if they are out of order, which can happen
+            //-----------------------------------------------------------------
+            if previousReceived.contains(udpRecieved as String){
+                return;
+            }
+            
+            if(previousReceived.count>30){
+                previousReceived.append(udpRecieved as String)
+                previousReceived.removeFirst()
+            }
+            else{
+                previousReceived.append(udpRecieved as String)
+            }
+            //-----------------------------------------------------------------
             
             // parse and handle udp data----------------------------------------------
             
