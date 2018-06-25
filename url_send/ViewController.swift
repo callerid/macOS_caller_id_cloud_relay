@@ -275,6 +275,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
     @IBOutlet weak var tbStatus: NSTextField!
     
     @IBOutlet weak var btnTestUrl: NSButton!
+    @IBOutlet weak var lbTested: NSTextField!
     
     @IBAction func rbBasicUnit_click(_ sender: Any) {
         
@@ -412,7 +413,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             rbPastedUrl.state = NSOnState
             rbCustomUrl.state = NSOffState
             
-            btnTestUrl.stringValue = "Test Supplied URL"
+            btnTestUrl.title = "Test Supplied URL"
             lbGeneratedUrl.textColor = #colorLiteral(red: 0.6000000238, green: 0.6000000238, blue: 0.6000000238, alpha: 1)
             
             lbDesHeader.textColor = #colorLiteral(red: 0.6000000238, green: 0.6000000238, blue: 0.6000000238, alpha: 1)
@@ -476,7 +477,7 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             rbPastedUrl.state = NSOffState
             rbCustomUrl.state = NSOnState
             
-            btnTestUrl.stringValue = "Test Built URL"
+            btnTestUrl.title = "Test Built URL"
             lbGeneratedUrl.textColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1)
             
             lbDesHeader.textColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
@@ -603,14 +604,25 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         if(usingSupplied){
             
+            lbTested.stringValue = "Sent to Supplied URL"
             post_url(urlPost: tbSuppliedUrl.stringValue, line: "01", time: "01/01 12:00 PM", phone: "770-263-7111", name: "CallerID.com", io: "I", se: "S", status: "x", duration: "0030", ringNumber: "03", ringType: "A")
             
         }
         else{
             
+            lbTested.stringValue = "Sent to Built URL"
             post_url(urlPost: lbGeneratedUrl.stringValue, line: "01", time: "01/01 12:00 PM", phone: "770-263-7111", name: "CallerID.com", io: "I", se: "S", status: "x", duration: "0030", ringNumber: "03", ringType: "A")
             
         }
+        
+        // Duplicate handling ticker
+        _ = Timer.scheduledTimer(timeInterval: 3.0, target: self, selector: #selector(resetTestedLable), userInfo: nil, repeats: false)
+        
+    }
+    
+    func resetTestedLable(){
+        
+        lbTested.stringValue = "idle"
         
     }
     
