@@ -53,6 +53,8 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
         
         // If first run
         if(defaults.string(forKey: sDataUsingSuppliedUrl) == nil){
+            rbDeluxeUnit.isEnabled=false
+            rbBasicUnit.isEnabled=false
             return
         }
         
@@ -65,11 +67,15 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             rbPastedUrl.state = NSOnState
             rbCustomUrl.state = NSOffState
             btnTestUrl.stringValue = "Test Supplied URL"
+            rbDeluxeUnit.isEnabled=false
+            rbBasicUnit.isEnabled=false
         }
         else{
             rbPastedUrl.state = NSOffState
             rbCustomUrl.state = NSOnState
             btnTestUrl.stringValue = "Test Built URL"
+            rbDeluxeUnit.isEnabled=true
+            rbBasicUnit.isEnabled=true
         }
         
         // Deluxe or Basic
@@ -413,6 +419,9 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             rbPastedUrl.state = NSOnState
             rbCustomUrl.state = NSOffState
             
+            rbDeluxeUnit.isEnabled=false
+            rbBasicUnit.isEnabled=false
+            
             btnTestUrl.title = "Test Supplied URL"
             lbGeneratedUrl.textColor = #colorLiteral(red: 0.6000000238, green: 0.6000000238, blue: 0.6000000238, alpha: 1)
             
@@ -476,6 +485,9 @@ class ViewController: NSViewController, GCDAsyncUdpSocketDelegate {
             
             rbPastedUrl.state = NSOffState
             rbCustomUrl.state = NSOnState
+            
+            rbDeluxeUnit.isEnabled=true
+            rbBasicUnit.isEnabled=true
             
             btnTestUrl.title = "Test Built URL"
             lbGeneratedUrl.textColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1)
@@ -1163,3 +1175,4 @@ extension String {
         }
     }
 }
+
